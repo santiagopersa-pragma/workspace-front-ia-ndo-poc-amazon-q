@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Login } from './pages/Login';
-import { CreateCategory } from './pages/CreateCategory';
+import { Categories } from './pages/Categories';
 import { useAuthStore } from './shared/store/authStore';
 
 function App() {
@@ -11,10 +11,10 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route 
-          path="/admin/categories" 
-          element={isAuthenticated ? <CreateCategory /> : <Navigate to="/login" />} 
+          path="/categories" 
+          element={isAuthenticated ? <Categories /> : <Navigate to="/login" />} 
         />
-        <Route path="/" element={<Navigate to="/login" />} />
+        <Route path="/" element={<Navigate to={isAuthenticated ? "/categories" : "/login"} />} />
       </Routes>
     </Router>
   );

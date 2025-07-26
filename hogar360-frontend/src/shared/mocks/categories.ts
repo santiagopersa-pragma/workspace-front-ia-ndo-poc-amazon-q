@@ -34,3 +34,25 @@ export const createCategory = async (data: { nombre: string; descripcion: string
   mockCategories.push(newCategory);
   return newCategory;
 };
+
+export const getCategories = async (page: number = 1, limit: number = 10) => {
+  const startIndex = (page - 1) * limit;
+  const endIndex = startIndex + limit;
+  const paginatedCategories = mockCategories.slice(startIndex, endIndex);
+  
+  return {
+    data: paginatedCategories,
+    total: mockCategories.length,
+    page,
+    limit,
+    totalPages: Math.ceil(mockCategories.length / limit)
+  };
+};
+
+export const deleteCategory = async (id: string): Promise<void> => {
+  const index = mockCategories.findIndex(cat => cat.id === id);
+  if (index === -1) {
+    throw new Error('Categoría no encontrada');
+  }
+  mockCategories.splice(index, 1);
+};

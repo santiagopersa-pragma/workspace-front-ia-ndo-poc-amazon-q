@@ -1,4 +1,4 @@
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '../../atoms/Button';
@@ -7,9 +7,11 @@ import type { CreateCategoryRequest } from '../../../shared/interfaces/types';
 
 const categorySchema = z.object({
   nombre: z.string()
+    .trim()
     .min(1, 'El nombre es requerido')
     .max(50, 'El nombre no puede exceder 50 caracteres'),
   descripcion: z.string()
+    .trim()
     .min(1, 'La descripción es requerida')
     .max(90, 'La descripción no puede exceder 90 caracteres')
 });
@@ -24,10 +26,13 @@ export const CategoryForm = ({ onSubmit, loading = false }: CategoryFormProps) =
     register,
     handleSubmit,
     formState: { errors },
-    reset
+    reset,
+    control
   } = useForm<CreateCategoryRequest>({
     resolver: zodResolver(categorySchema)
   });
+
+  const descripcionValue = useWatch({ control, name: 'descripcion', defaultValue: '' });
 
   const handleFormSubmit = async (data: CreateCategoryRequest) => {
     try {
@@ -41,7 +46,7 @@ export const CategoryForm = ({ onSubmit, loading = false }: CategoryFormProps) =
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
       <Input
-        label="Nombre de la categoría"
+        label="Nombre de la categoría *"
         placeholder="Ej: Casa, Apartamento, Local Comercial"
         {...register('nombre')}
         error={errors.nombre?.message}
@@ -49,24 +54,31 @@ export const CategoryForm = ({ onSubmit, loading = false }: CategoryFormProps) =
       
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Descripción
+          Descripción *
         </label>
-        <textarea
-          className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm ${
-            errors.descripcion ? 'border-red-500' : 'border-border'
-          }`}
-          rows={3}
-          placeholder="Describe las características de esta categoría"
-          {...register('descripcion')}
-        />
+        <div className="relative">
+          <textarea
+            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm ${
+              errors.descripcion ? 'border-red-500' : 'border-border'
+            }`}
+            rows={3}
+            placeholder="Describe las características de esta categoría"
+            {...register('descripcion')}
+          />
+          <div className="absolute bottom-2 right-2 text-xs text-gray-500">
+            {descripcionValue?.length || 0}/90
+          </div>
+        </div>
         {errors.descripcion && (
           <p className="mt-1 text-sm text-red-600">{errors.descripcion.message}</p>
         )}
       </div>
 
-      <Button type="submit" loading={loading} className="w-full">
-        Crear Categoría
-      </Button>
+      <div className="flex justify-end">
+        <Button type="submit" loading={loading}>
+          Crear
+        </Button>
+      </div>
     </form>
   );
 };

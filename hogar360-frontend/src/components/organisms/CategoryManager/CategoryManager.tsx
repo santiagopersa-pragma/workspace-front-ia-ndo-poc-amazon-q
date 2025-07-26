@@ -3,7 +3,11 @@ import { CategoryForm } from '../../molecules/CategoryForm';
 import { createCategory } from '../../../shared/mocks/categories';
 import type { CreateCategoryRequest, Category } from '../../../shared/interfaces/types';
 
-export const CategoryManager = () => {
+interface CategoryManagerProps {
+  onCategoryCreated?: () => void;
+}
+
+export const CategoryManager = ({ onCategoryCreated }: CategoryManagerProps) => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -17,6 +21,7 @@ export const CategoryManager = () => {
         type: 'success',
         text: `Categoría "${newCategory.nombre}" creada exitosamente`
       });
+      onCategoryCreated?.();
     } catch (error) {
       setMessage({
         type: 'error',
@@ -28,9 +33,7 @@ export const CategoryManager = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto bg-white p-6 rounded-lg border border-border">
-      <h2 className="text-2xl font-poppins font-medium text-gray-900 mb-6">Crear Categoría</h2>
-      
+    <div className="max-w-6xl mx-auto bg-white p-6 rounded-lg border border-border">
       {message && (
         <div className={`mb-4 p-3 rounded-lg ${
           message.type === 'success' 

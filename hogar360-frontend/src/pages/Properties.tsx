@@ -1,24 +1,15 @@
 import { useState } from 'react';
 import { useAuthStore } from '../shared/store/authStore';
-import { CategoryManager } from '../components/organisms/CategoryManager';
-import { CategoryViewer } from '../components/organisms/CategoryViewer';
 import { Sidebar } from '../components/organisms/Sidebar';
 import { Navigate } from 'react-router-dom';
 
-export const Categories = () => {
+export const Properties = () => {
   const { user, isAuthenticated, logout } = useAuthStore();
-  const [refreshKey, setRefreshKey] = useState(0);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
-
-  const isAdmin = user?.rol === 'admin';
-
-  const handleCategoryCreated = () => {
-    setRefreshKey(prev => prev + 1);
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -71,14 +62,11 @@ export const Categories = () => {
 
       {/* Content */}
       <div className="py-8 lg:ml-64">
-        <div className="container mx-auto px-4 space-y-8">
-          {isAdmin && (
-            <div className="max-w-6xl mx-auto">
-              <h2 className="text-2xl font-poppins font-medium text-gray-900 mb-6">Crear Categoría</h2>
-              <CategoryManager onCategoryCreated={handleCategoryCreated} />
-            </div>
-          )}
-          <CategoryViewer key={refreshKey} />
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-poppins font-medium text-gray-900 mb-6">Propiedades</h2>
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <p className="text-gray-600">Gestión de propiedades próximamente...</p>
+          </div>
         </div>
       </div>
     </div>

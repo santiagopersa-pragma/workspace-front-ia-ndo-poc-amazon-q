@@ -13,6 +13,7 @@ const menuItems: MenuItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: 'dashboard-icon', path: '/dashboard' },
   { id: 'properties', label: 'Propiedades', icon: 'properties-icon', path: '/properties' },
   { id: 'categories', label: 'Categorías', icon: 'categories-icon', path: '/categories' },
+  { id: 'locations', label: 'Ubicaciones', icon: 'properties-icon', path: '/locations' },
   { id: 'users', label: 'Usuarios', icon: 'users-icon', path: '/users' },
   { id: 'settings', label: 'Configuración', icon: 'settings-icon', path: '/settings' },
 ];

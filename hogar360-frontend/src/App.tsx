@@ -3,6 +3,7 @@ import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
 import { Properties } from './pages/Properties';
 import { Categories } from './pages/Categories';
+import { Locations } from './pages/Locations';
 import { Users } from './pages/Users';
 import { Settings } from './pages/Settings';
 import { useAuthStore } from './shared/store/authStore';
@@ -25,6 +26,10 @@ function App() {
         <Route 
           path="/categories" 
           element={isAuthenticated ? <Categories /> : <Navigate to="/login" />} 
+        />
+        <Route 
+          path="/locations" 
+          element={isAuthenticated ? <Locations /> : <Navigate to="/login" />} 
         />
         <Route 
           path="/users" 

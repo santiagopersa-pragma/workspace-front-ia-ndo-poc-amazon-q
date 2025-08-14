@@ -1,0 +1,1 @@
+export { LocationResults } from './LocationResults';

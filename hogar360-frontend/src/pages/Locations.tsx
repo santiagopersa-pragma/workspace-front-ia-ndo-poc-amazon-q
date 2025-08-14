@@ -5,8 +5,10 @@ import { DepartmentForm } from '../components/molecules/DepartmentForm';
 import { CityForm } from '../components/molecules/CityForm';
 import { DepartmentList } from '../components/molecules/DepartmentList';
 import { CityList } from '../components/molecules/CityList';
+import { LocationSearch } from '../components/molecules/LocationSearch';
+import { LocationResults } from '../components/molecules/LocationResults';
 import { createDepartment, getDepartments, deleteDepartment } from '../shared/mocks/departments';
-import { createCity, searchCities, deleteCity } from '../shared/mocks/cities';
+import { createCity, searchCities, searchCitiesSimple, deleteCity } from '../shared/mocks/cities';
 import { Input } from '../components/atoms/Input';
 import { Navigate } from 'react-router-dom';
 import type { Department, City, CreateDepartmentRequest, CreateCityRequest } from '../shared/interfaces/types';
@@ -14,7 +16,7 @@ import type { Department, City, CreateDepartmentRequest, CreateCityRequest } fro
 export const Locations = () => {
   const { user, isAuthenticated, logout } = useAuthStore();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [activeTab, setActiveTab] = useState<'departments' | 'cities'>('departments');
+  const [activeTab, setActiveTab] = useState<'departments' | 'cities' | 'search'>('departments');
   
   // Department state
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -28,6 +30,13 @@ export const Locations = () => {
   const [cityMessage, setCityMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [citySearchQuery, setCitySearchQuery] = useState('');
   const [deletingCity, setDeletingCity] = useState<string | null>(null);
+  
+  // Search state
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchTotalPages, setSearchTotalPages] = useState(1);
+  const [searchCurrentPage, setSearchCurrentPage] = useState(1);
+  const [lastSearchParams, setLastSearchParams] = useState<any>(null);
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
@@ -49,7 +58,7 @@ export const Locations = () => {
   const loadCities = async (query: string = '') => {
     setCityLoading(true);
     try {
-      const citiesData = await searchCities(query);
+      const citiesData = await searchCitiesSimple(query);
       setCities(citiesData);
     } catch (error) {
       console.error('Error al cargar ciudades:', error);
@@ -64,8 +73,10 @@ export const Locations = () => {
   }, []);
 
   useEffect(() => {
-    loadCities(citySearchQuery);
-  }, [citySearchQuery]);
+    if (activeTab === 'cities') {
+      loadCities(citySearchQuery);
+    }
+  }, [citySearchQuery, activeTab]);
 
   // Handle department creation
   const handleCreateDepartment = async (data: CreateDepartmentRequest) => {
@@ -161,6 +172,55 @@ export const Locations = () => {
     }
   };
 
+  // Handle location search
+  const handleLocationSearch = async (params: {
+    query: string;
+    sortBy: 'city' | 'department';
+    sortOrder: 'asc' | 'desc';
+  }) => {
+    setSearchLoading(true);
+    setSearchCurrentPage(1);
+    setLastSearchParams(params);
+    
+    try {
+      const result = await searchCities({
+        ...params,
+        page: 1,
+        limit: 10
+      });
+      
+      setSearchResults(result.data);
+      setSearchTotalPages(result.totalPages);
+    } catch (error) {
+      console.error('Error al buscar ubicaciones:', error);
+      setSearchResults([]);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  // Handle search page change
+  const handleSearchPageChange = async (page: number) => {
+    if (!lastSearchParams) return;
+    
+    setSearchLoading(true);
+    setSearchCurrentPage(page);
+    
+    try {
+      const result = await searchCities({
+        ...lastSearchParams,
+        page,
+        limit: 10
+      });
+      
+      setSearchResults(result.data);
+    } catch (error) {
+      console.error('Error al cambiar página:', error);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Sidebar />
@@ -239,6 +299,16 @@ export const Locations = () => {
                 >
                   Ciudades
                 </button>
+                <button
+                  onClick={() => setActiveTab('search')}
+                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === 'search'
+                      ? 'border-primary-500 text-primary-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  Buscar Ubicaciones
+                </button>
               </nav>
             </div>
           </div>
@@ -297,10 +367,10 @@ export const Locations = () => {
               )}
               
               <div>
-                <h3 className="text-xl font-poppins font-medium text-gray-900 mb-4">Buscar Ciudades</h3>
+                <h3 className="text-xl font-poppins font-medium text-gray-900 mb-4">Ciudades Existentes</h3>
                 <div className="bg-white p-6 rounded-lg border border-border mb-6">
                   <Input
-                    placeholder="Buscar por ciudad o departamento..."
+                    placeholder="Filtrar por ciudad o departamento..."
                     value={citySearchQuery}
                     onChange={(e) => setCitySearchQuery(e.target.value)}
                   />
@@ -312,6 +382,29 @@ export const Locations = () => {
                   deletingId={deletingCity}
                 />
               </div>
+            </div>
+          )}
+
+          {/* Search Tab */}
+          {activeTab === 'search' && (
+            <div className="space-y-8">
+              <div>
+                <h3 className="text-xl font-poppins font-medium text-gray-900 mb-4">Buscar Ubicaciones</h3>
+                <LocationSearch onSearch={handleLocationSearch} loading={searchLoading} />
+              </div>
+              
+              {(searchResults.length > 0 || searchLoading) && (
+                <div>
+                  <h3 className="text-xl font-poppins font-medium text-gray-900 mb-4">Resultados de Búsqueda</h3>
+                  <LocationResults
+                    cities={searchResults}
+                    loading={searchLoading}
+                    totalPages={searchTotalPages}
+                    currentPage={searchCurrentPage}
+                    onPageChange={handleSearchPageChange}
+                  />
+                </div>
+              )}
             </div>
           )}
         </div>

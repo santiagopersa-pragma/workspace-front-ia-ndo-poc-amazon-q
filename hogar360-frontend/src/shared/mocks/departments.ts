@@ -15,6 +15,11 @@ export const mockDepartments: Department[] = [
     id: '3',
     nombre: 'Valle del Cauca',
     descripcion: 'Departamento del suroccidente colombiano, valle geográfico del río Cauca'
+  },
+  {
+    id: '4',
+    nombre: 'Atlántico',
+    descripcion: 'Departamento de la costa caribe colombiana'
   }
 ];
 

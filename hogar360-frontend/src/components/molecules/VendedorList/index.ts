@@ -1,0 +1,1 @@
+export { VendedorList } from './VendedorList';

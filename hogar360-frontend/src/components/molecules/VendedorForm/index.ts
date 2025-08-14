@@ -1,0 +1,1 @@
+export { VendedorForm } from './VendedorForm';

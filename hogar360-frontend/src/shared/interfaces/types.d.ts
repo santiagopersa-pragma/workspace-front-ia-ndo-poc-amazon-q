@@ -15,6 +15,19 @@ export interface User {
   apellido: string;
   email: string;
   rol: 'admin' | 'vendedor' | 'comprador';
+  documentoIdentidad?: string;
+  celular?: string;
+  fechaNacimiento?: string;
+}
+
+export interface CreateUserRequest {
+  nombre: string;
+  apellido: string;
+  documentoIdentidad: string;
+  celular: string;
+  fechaNacimiento: string;
+  email: string;
+  clave: string;
 }
 
 export interface AuthState {

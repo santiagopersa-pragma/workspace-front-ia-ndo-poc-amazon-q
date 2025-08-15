@@ -3,10 +3,14 @@ import { Input } from '../../atoms/Input';
 import { Button } from '../../atoms/Button';
 import { searchCitiesSimple } from '../../../shared/mocks/cities';
 import { searchHorariosDisponibles } from '../../../shared/mocks/horarios';
+import { createVisitaAgendada, getVisitasCountByHorario } from '../../../shared/mocks/visitas';
+import { AgendarVisitaModal } from '../AgendarVisitaModal';
 import { Pagination } from '../Pagination';
-import type { City } from '../../../shared/interfaces/types';
+import { useAuthStore } from '../../../shared/store/authStore';
+import type { City, CreateVisitaAgendadaRequest } from '../../../shared/interfaces/types';
 
 export const HorariosDisponibles = () => {
+  const { user } = useAuthStore();
   const [fechaHoraInicio, setFechaHoraInicio] = useState('');
   const [fechaHoraFin, setFechaHoraFin] = useState('');
   const [ciudadId, setCiudadId] = useState('');
@@ -15,6 +19,10 @@ export const HorariosDisponibles = () => {
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedHorarioId, setSelectedHorarioId] = useState('');
+  const [agendandoId, setAgendandoId] = useState<string | null>(null);
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
     loadCities();
@@ -60,6 +68,34 @@ export const HorariosDisponibles = () => {
     loadHorarios(page);
   };
 
+  const handleAgendar = (horarioId: string) => {
+    setSelectedHorarioId(horarioId);
+    setModalOpen(true);
+  };
+
+  const handleAgendarSubmit = async (data: CreateVisitaAgendadaRequest) => {
+    setAgendandoId(data.horarioDisponibleId);
+    setMessage(null);
+    
+    try {
+      await createVisitaAgendada(data);
+      setMessage({
+        type: 'success',
+        text: 'Visita agendada exitosamente'
+      });
+      setModalOpen(false);
+      loadHorarios(currentPage); // Recargar para actualizar disponibilidad
+      setTimeout(() => setMessage(null), 3000);
+    } catch (error) {
+      setMessage({
+        type: 'error',
+        text: error instanceof Error ? error.message : 'Error al agendar la visita'
+      });
+    } finally {
+      setAgendandoId(null);
+    }
+  };
+
   const formatDateTime = (dateTime: string) => {
     return new Date(dateTime).toLocaleString('es-CO', {
       year: 'numeric',
@@ -70,8 +106,20 @@ export const HorariosDisponibles = () => {
     });
   };
 
+  const isComprador = user?.rol === 'comprador';
+
   return (
     <div className="space-y-6">
+      {message && (
+        <div className={`p-3 rounded-lg ${
+          message.type === 'success' 
+            ? 'bg-green-50 text-green-800 border border-green-200' 
+            : 'bg-red-50 text-red-800 border border-red-200'
+        }`}>
+          {message.text}
+        </div>
+      )}
+      
       {/* Filtros */}
       <div className="bg-white p-6 rounded-lg border border-border">
         <h4 className="text-lg font-medium text-gray-900 mb-4">Filtrar Horarios</h4>
@@ -124,6 +172,8 @@ export const HorariosDisponibles = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendedor</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha Inicio</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha Fin</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Disponibilidad</th>
+                {isComprador && <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>}
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -135,11 +185,13 @@ export const HorariosDisponibles = () => {
                     <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-20"></div></td>
                     <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-28"></div></td>
                     <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-28"></div></td>
+                    <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-12"></div></td>
+                    {isComprador && <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-16"></div></td>}
                   </tr>
                 ))
               ) : horarios.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                  <td colSpan={isComprador ? 7 : 6} className="px-6 py-8 text-center text-gray-500">
                     No hay horarios disponibles
                   </td>
                 </tr>
@@ -161,6 +213,29 @@ export const HorariosDisponibles = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                       {formatDateTime(horario.fechaHoraFin)}
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      <span className={`font-medium ${
+                        getVisitasCountByHorario(horario.id) === 0 
+                          ? 'text-green-600' 
+                          : getVisitasCountByHorario(horario.id) === 1 
+                          ? 'text-yellow-600' 
+                          : 'text-red-600'
+                      }`}>
+                        {getVisitasCountByHorario(horario.id)}/2
+                      </span>
+                    </td>
+                    {isComprador && (
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <Button
+                          onClick={() => handleAgendar(horario.id)}
+                          size="sm"
+                          loading={agendandoId === horario.id}
+                          disabled={agendandoId === horario.id}
+                        >
+                          Agendar
+                        </Button>
+                      </td>
+                    )}
                   </tr>
                 ))
               )}
@@ -173,6 +248,14 @@ export const HorariosDisponibles = () => {
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={handlePageChange}
+      />
+      
+      <AgendarVisitaModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onSubmit={handleAgendarSubmit}
+        horarioId={selectedHorarioId}
+        loading={agendandoId === selectedHorarioId}
       />
     </div>
   );

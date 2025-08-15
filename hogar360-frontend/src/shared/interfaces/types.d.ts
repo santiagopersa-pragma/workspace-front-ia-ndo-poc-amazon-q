@@ -128,3 +128,15 @@ export interface SearchHorariosDisponiblesParams {
   page?: number;
   limit?: number;
 }
+
+export interface VisitaAgendada {
+  id: string;
+  horarioDisponibleId: string;
+  compradorEmail: string;
+  fechaAgendamiento: string;
+}
+
+export interface CreateVisitaAgendadaRequest {
+  horarioDisponibleId: string;
+  compradorEmail: string;
+}

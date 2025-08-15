@@ -1,6 +1,7 @@
 import type { HorarioVisita } from '../../../shared/interfaces/types';
 import { Icon } from '../../atoms/Icon';
 import { Pagination } from '../Pagination';
+import { getVisitasCountByHorario } from '../../../shared/mocks/visitas';
 
 interface HorarioListProps {
   horarios: (HorarioVisita & { 
@@ -48,6 +49,7 @@ export const HorarioList = ({
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ubicación</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha Inicio</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha Fin</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Disponibilidad</th>
                 {onDelete && <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>}
               </tr>
             </thead>
@@ -58,6 +60,7 @@ export const HorarioList = ({
                   <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-24"></div></td>
                   <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-28"></div></td>
                   <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-28"></div></td>
+                  <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-12"></div></td>
                   {onDelete && <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-6"></div></td>}
                 </tr>
               ))}
@@ -87,6 +90,7 @@ export const HorarioList = ({
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ubicación</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha Inicio</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha Fin</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Disponibilidad</th>
                 {onDelete && <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>}
               </tr>
             </thead>
@@ -104,6 +108,17 @@ export const HorarioList = ({
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                     {formatDateTime(horario.fechaHoraFin)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                    <span className={`font-medium ${
+                      getVisitasCountByHorario(horario.id) === 0 
+                        ? 'text-green-600' 
+                        : getVisitasCountByHorario(horario.id) === 1 
+                        ? 'text-yellow-600' 
+                        : 'text-red-600'
+                    }`}>
+                      {getVisitasCountByHorario(horario.id)}/2
+                    </span>
                   </td>
                   {onDelete && (
                     <td className="px-6 py-4 whitespace-nowrap text-sm">

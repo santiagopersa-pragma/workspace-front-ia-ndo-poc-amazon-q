@@ -4,6 +4,7 @@ import { mockUsers } from './users';
 import { mockCities } from './cities';
 import { mockDepartments } from './departments';
 import { mockCategories } from './categories';
+import { getVisitasCountByHorario } from './visitas';
 
 export const mockHorarios: HorarioVisita[] = [];
 
@@ -112,6 +113,10 @@ export const searchHorariosDisponibles = async (params: any = {}) => {
     .filter(horario => {
       // No mostrar horarios cuya fecha de inicio sea menor a la fecha actual
       if (new Date(horario.fechaHoraInicio) <= ahora) {
+        return false;
+      }
+      // No mostrar horarios que ya tienen 2 compradores agendados
+      if (getVisitasCountByHorario(horario.id) >= 2) {
         return false;
       }
       return true;

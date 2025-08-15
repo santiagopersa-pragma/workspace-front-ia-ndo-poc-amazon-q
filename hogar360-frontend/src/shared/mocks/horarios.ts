@@ -1,6 +1,9 @@
 import type { HorarioVisita, CreateHorarioVisitaRequest } from '../interfaces/types';
 import { mockCasas } from './casas';
 import { mockUsers } from './users';
+import { mockCities } from './cities';
+import { mockDepartments } from './departments';
+import { mockCategories } from './categories';
 
 export const mockHorarios: HorarioVisita[] = [];
 
@@ -91,4 +94,84 @@ export const deleteHorarioVisita = async (id: string, vendedorId: string): Promi
     throw new Error('Horario no encontrado o no tienes permisos para eliminarlo');
   }
   mockHorarios.splice(index, 1);
+};
+
+export const searchHorariosDisponibles = async (params: any = {}) => {
+  const {
+    fechaHoraInicio,
+    fechaHoraFin,
+    ciudadId,
+    page = 1,
+    limit = 10
+  } = params;
+
+  const ahora = new Date();
+  
+  // Filtrar horarios disponibles
+  let horariosDisponibles = mockHorarios
+    .filter(horario => {
+      // No mostrar horarios cuya fecha de inicio sea menor a la fecha actual
+      if (new Date(horario.fechaHoraInicio) <= ahora) {
+        return false;
+      }
+      return true;
+    })
+    .map(horario => ({
+      ...horario,
+      casa: mockCasas.find(casa => casa.id === horario.casaId),
+      vendedor: mockUsers.find(user => user.id === horario.vendedorId)
+    }))
+    .map(horario => ({
+      ...horario,
+      casa: horario.casa ? {
+        ...horario.casa,
+        ciudad: mockCities.find(city => city.id === horario.casa?.ciudadId),
+        categoria: mockCategories.find(cat => cat.id === horario.casa?.categoriaId)
+      } : undefined
+    }))
+    .map(horario => ({
+      ...horario,
+      casa: horario.casa?.ciudad ? {
+        ...horario.casa,
+        ciudad: {
+          ...horario.casa.ciudad,
+          departamento: mockDepartments.find(dept => dept.id === horario.casa?.ciudad?.departamentoId)
+        }
+      } : horario.casa
+    }));
+
+  // Aplicar filtros
+  if (fechaHoraInicio) {
+    horariosDisponibles = horariosDisponibles.filter(horario => 
+      horario.fechaHoraInicio >= fechaHoraInicio
+    );
+  }
+  if (fechaHoraFin) {
+    horariosDisponibles = horariosDisponibles.filter(horario => 
+      horario.fechaHoraFin <= fechaHoraFin
+    );
+  }
+  if (ciudadId) {
+    horariosDisponibles = horariosDisponibles.filter(horario => 
+      horario.casa?.ciudadId === ciudadId
+    );
+  }
+
+  // Ordenar por fecha y hora de inicio descendente
+  horariosDisponibles.sort((a, b) => 
+    new Date(b.fechaHoraInicio).getTime() - new Date(a.fechaHoraInicio).getTime()
+  );
+
+  // Paginar
+  const totalItems = horariosDisponibles.length;
+  const totalPages = Math.ceil(totalItems / limit);
+  const startIndex = (page - 1) * limit;
+  const paginatedHorarios = horariosDisponibles.slice(startIndex, startIndex + limit);
+
+  return {
+    data: paginatedHorarios,
+    totalItems,
+    totalPages,
+    currentPage: page
+  };
 };

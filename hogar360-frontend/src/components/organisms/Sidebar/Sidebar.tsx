@@ -59,11 +59,6 @@ export const Sidebar = () => {
         <nav className="p-4">
           <ul className="space-y-2">
             {menuItems.map((item) => {
-              // Ocultar "Horarios" si el usuario no es vendedor
-              if (item.id === 'horarios' && user?.rol !== 'vendedor') {
-                return null;
-              }
-              
               const isActive = location.pathname === item.path;
               
               return (

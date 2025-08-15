@@ -120,3 +120,11 @@ export interface CreateHorarioVisitaRequest {
   fechaHoraInicio: string;
   fechaHoraFin: string;
 }
+
+export interface SearchHorariosDisponiblesParams {
+  fechaHoraInicio?: string;
+  fechaHoraFin?: string;
+  ciudadId?: string;
+  page?: number;
+  limit?: number;
+}

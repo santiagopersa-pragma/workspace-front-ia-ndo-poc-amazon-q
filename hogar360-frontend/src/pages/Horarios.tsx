@@ -3,6 +3,7 @@ import { useAuthStore } from '../shared/store/authStore';
 import { Sidebar } from '../components/organisms/Sidebar';
 import { HorarioForm } from '../components/molecules/HorarioForm';
 import { HorarioList } from '../components/molecules/HorarioList';
+import { HorariosDisponibles } from '../components/molecules/HorariosDisponibles';
 import { createHorarioVisita, getHorariosByVendedor, deleteHorarioVisita } from '../shared/mocks/horarios';
 import { Navigate } from 'react-router-dom';
 import type { CreateHorarioVisitaRequest, HorarioVisita } from '../shared/interfaces/types';
@@ -10,7 +11,6 @@ import type { CreateHorarioVisitaRequest, HorarioVisita } from '../shared/interf
 export const Horarios = () => {
   const { user, isAuthenticated, logout } = useAuthStore();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [activeTab, setActiveTab] = useState<'create' | 'list'>('create');
   
   const [horarios, setHorarios] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -24,10 +24,9 @@ export const Horarios = () => {
   }
 
   const isVendedor = user?.rol === 'vendedor';
+  const [activeTab, setActiveTab] = useState<'create' | 'list' | 'disponibles'>(isVendedor ? 'create' : 'disponibles');
 
-  if (!isVendedor) {
-    return <Navigate to="/dashboard" replace />;
-  }
+
 
   useEffect(() => {
     if (activeTab === 'list') {
@@ -164,25 +163,39 @@ export const Horarios = () => {
           <div className="mb-6">
             <div className="border-b border-gray-200">
               <nav className="-mb-px flex space-x-8">
+                {isVendedor && (
+                  <button
+                    onClick={() => setActiveTab('create')}
+                    className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                      activeTab === 'create'
+                        ? 'border-primary-500 text-primary-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    Crear Horario
+                  </button>
+                )}
+                {isVendedor && (
+                  <button
+                    onClick={() => setActiveTab('list')}
+                    className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                      activeTab === 'list'
+                        ? 'border-primary-500 text-primary-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    Mis Horarios
+                  </button>
+                )}
                 <button
-                  onClick={() => setActiveTab('create')}
+                  onClick={() => setActiveTab('disponibles')}
                   className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === 'create'
+                    activeTab === 'disponibles'
                       ? 'border-primary-500 text-primary-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
                 >
-                  Crear Horario
-                </button>
-                <button
-                  onClick={() => setActiveTab('list')}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === 'list'
-                      ? 'border-primary-500 text-primary-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  Mis Horarios
+                  Horarios Disponibles
                 </button>
               </nav>
             </div>
@@ -220,6 +233,14 @@ export const Horarios = () => {
                 currentPage={currentPage}
                 onPageChange={handlePageChange}
               />
+            </div>
+          )}
+
+          {/* Disponibles Tab */}
+          {activeTab === 'disponibles' && (
+            <div>
+              <h3 className="text-xl font-poppins font-medium text-gray-900 mb-4">Horarios Disponibles</h3>
+              <HorariosDisponibles />
             </div>
           )}
         </div>

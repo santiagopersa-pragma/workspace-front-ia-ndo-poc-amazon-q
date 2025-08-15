@@ -19,8 +19,8 @@ export const Button = ({
   
   const variantClasses = {
     primary: 'bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500',
-    secondary: 'bg-gray-100 text-gray-700 hover:bg-gray-200 focus:ring-gray-500 border border-border',
-    outline: 'border border-border text-gray-700 hover:bg-gray-50 focus:ring-primary-500'
+    secondary: 'bg-gray-100 text-gray-700 hover:bg-gray-200 focus:ring-gray-500 border border-gray-300',
+    outline: 'border border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-primary-500'
   };
 
   const sizeClasses = {
@@ -31,9 +31,9 @@ export const Button = ({
 
   return (
     <button
-      className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className} ${
+      className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${
         (disabled || loading) ? 'opacity-50 cursor-not-allowed' : ''
-      }`}
+      } ${className}`}
       disabled={disabled || loading}
       {...props}
     >

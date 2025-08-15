@@ -36,7 +36,7 @@ export const Login = () => {
     try {
       const user = await authenticateUser(data.email, data.password);
       login(user);
-      navigate('/categories');
+      navigate('/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error de autenticación');
     } finally {

@@ -104,3 +104,19 @@ export interface CreateCasaRequest {
   ciudadId: string;
   fechaPublicacionActiva: string;
 }
+
+export interface HorarioVisita {
+  id: string;
+  vendedorId: string;
+  casaId: string;
+  fechaHoraInicio: string;
+  fechaHoraFin: string;
+  vendedor?: User;
+  casa?: Casa;
+}
+
+export interface CreateHorarioVisitaRequest {
+  casaId: string;
+  fechaHoraInicio: string;
+  fechaHoraFin: string;
+}

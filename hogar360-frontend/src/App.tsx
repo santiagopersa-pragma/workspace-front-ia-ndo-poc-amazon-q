@@ -7,6 +7,7 @@ import { Categories } from './pages/Categories';
 import { Locations } from './pages/Locations';
 import { Users } from './pages/Users';
 import { Settings } from './pages/Settings';
+import { Horarios } from './pages/Horarios';
 import { useAuthStore } from './shared/store/authStore';
 
 function App() {
@@ -40,6 +41,10 @@ function App() {
         <Route 
           path="/settings" 
           element={isAuthenticated ? <Settings /> : <Navigate to="/login" />} 
+        />
+        <Route 
+          path="/horarios" 
+          element={isAuthenticated ? <Horarios /> : <Navigate to="/login" />} 
         />
       </Routes>
     </Router>

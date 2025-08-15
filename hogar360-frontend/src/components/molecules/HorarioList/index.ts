@@ -1,0 +1,1 @@
+export { HorarioList } from './HorarioList';

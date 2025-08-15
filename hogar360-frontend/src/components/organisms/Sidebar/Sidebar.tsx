@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { Icon } from '../../atoms/Icon';
+import { useAuthStore } from '../../../shared/store/authStore';
 
 interface MenuItem {
   id: string;
@@ -15,12 +16,14 @@ const menuItems: MenuItem[] = [
   { id: 'categories', label: 'Categorías', icon: 'categories-icon', path: '/categories' },
   { id: 'locations', label: 'Ubicaciones', icon: 'properties-icon', path: '/locations' },
   { id: 'users', label: 'Usuarios', icon: 'users-icon', path: '/users' },
+  { id: 'horarios', label: 'Horarios', icon: 'dashboard-icon', path: '/horarios' },
   { id: 'settings', label: 'Configuración', icon: 'settings-icon', path: '/settings' },
 ];
 
 export const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(true);
   const location = useLocation();
+  const { user } = useAuthStore();
 
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);
@@ -56,6 +59,11 @@ export const Sidebar = () => {
         <nav className="p-4">
           <ul className="space-y-2">
             {menuItems.map((item) => {
+              // Ocultar "Horarios" si el usuario no es vendedor
+              if (item.id === 'horarios' && user?.rol !== 'vendedor') {
+                return null;
+              }
+              
               const isActive = location.pathname === item.path;
               
               return (

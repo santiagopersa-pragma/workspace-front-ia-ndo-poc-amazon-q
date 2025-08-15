@@ -1,0 +1,1 @@
+export { HorarioForm } from './HorarioForm';

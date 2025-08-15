@@ -75,3 +75,32 @@ export interface CreateLocationRequest {
   descripcionCiudad: string;
   descripcionDepartamento: string;
 }
+
+export interface Casa {
+  id: string;
+  nombre: string;
+  descripcion: string;
+  categoriaId: string;
+  categoria?: Category;
+  cantidadCuartos: number;
+  cantidadBanos: number;
+  precio: number;
+  ciudadId: string;
+  ciudad?: City;
+  fechaPublicacionActiva: string;
+  estadoPublicacion: 'PUBLICADA' | 'PUBLICACION_PAUSADA' | 'TRANSACCION_CURSO' | 'TRANSACCION_FINALIZADA';
+  fechaPublicacion: string;
+  vendedorId: string;
+  vendedor?: User;
+}
+
+export interface CreateCasaRequest {
+  nombre: string;
+  descripcion: string;
+  categoriaId: string;
+  cantidadCuartos: number;
+  cantidadBanos: number;
+  precio: number;
+  ciudadId: string;
+  fechaPublicacionActiva: string;
+}

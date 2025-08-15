@@ -3,14 +3,23 @@ import { useAuthStore } from '../shared/store/authStore';
 import { Sidebar } from '../components/organisms/Sidebar';
 import { CasaForm } from '../components/molecules/CasaForm';
 import { CasaList } from '../components/molecules/CasaList';
-import { createCasa, getCasasWithDetails, getCasasByVendedor, deleteCasa } from '../shared/mocks/casas';
+import { CasaFilters } from '../components/molecules/CasaFilters';
+import { createCasa, getCasasWithDetails, getCasasByVendedor, deleteCasa, searchCasas } from '../shared/mocks/casas';
 import { Navigate } from 'react-router-dom';
 import type { Casa, CreateCasaRequest } from '../shared/interfaces/types';
 
 export const Properties = () => {
   const { user, isAuthenticated, logout } = useAuthStore();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [activeTab, setActiveTab] = useState<'publish' | 'my-properties' | 'all-properties'>('publish');
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  const isVendedor = user?.rol === 'vendedor';
+  const [activeTab, setActiveTab] = useState<'publish' | 'my-properties' | 'all-properties'>(
+    isVendedor ? 'publish' : 'all-properties'
+  );
   
   // Casa state
   const [casas, setCasas] = useState<any[]>([]);
@@ -20,19 +29,21 @@ export const Properties = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
-  const isVendedor = user?.rol === 'vendedor';
+  // Filter state for all properties
+  const [lastFilters, setLastFilters] = useState<any>(null);
 
   // Load casas
   const loadCasas = async (page: number = 1, type: 'my' | 'all' = 'all') => {
     setLoading(true);
     try {
-      const response = type === 'my' && user?.id
-        ? await getCasasByVendedor(user.id, page, 5)
-        : await getCasasWithDetails(page, 5);
+      let response;
+      if (type === 'my' && user?.id) {
+        response = await getCasasByVendedor(user.id, page, 5);
+      } else if (type === 'all' && lastFilters) {
+        response = await searchCasas({ ...lastFilters, page, limit: 5 });
+      } else {
+        response = await getCasasWithDetails(page, 5);
+      }
       
       setCasas(response.data);
       setTotalPages(response.totalPages);
@@ -105,6 +116,23 @@ export const Properties = () => {
       } finally {
         setDeletingId(null);
       }
+    }
+  };
+
+  // Handle filters
+  const handleFilter = async (filters: any) => {
+    setLastFilters(filters);
+    setCurrentPage(1);
+    setLoading(true);
+    
+    try {
+      const response = await searchCasas({ ...filters, page: 1, limit: 5 });
+      setCasas(response.data);
+      setTotalPages(response.totalPages);
+    } catch (error) {
+      console.error('Error al filtrar casas:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -247,16 +275,23 @@ export const Properties = () => {
 
           {/* All Properties Tab */}
           {activeTab === 'all-properties' && (
-            <div>
-              <h3 className="text-xl font-poppins font-medium text-gray-900 mb-4">Todas las Propiedades</h3>
-              <CasaList
-                casas={casas}
-                loading={loading}
-                totalPages={totalPages}
-                currentPage={currentPage}
-                onPageChange={handlePageChange}
-                showVendedor={true}
-              />
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-xl font-poppins font-medium text-gray-900 mb-4">Buscar y Filtrar Propiedades</h3>
+                <CasaFilters onFilter={handleFilter} loading={loading} />
+              </div>
+              
+              <div>
+                <h3 className="text-xl font-poppins font-medium text-gray-900 mb-4">Resultados</h3>
+                <CasaList
+                  casas={casas}
+                  loading={loading}
+                  totalPages={totalPages}
+                  currentPage={currentPage}
+                  onPageChange={handlePageChange}
+                  showVendedor={true}
+                />
+              </div>
             </div>
           )}
         </div>

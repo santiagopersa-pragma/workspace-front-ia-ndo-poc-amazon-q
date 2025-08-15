@@ -18,6 +18,76 @@ export const mockCasas: Casa[] = [
     estadoPublicacion: 'PUBLICADA',
     fechaPublicacion: '2024-01-10',
     vendedorId: '2'
+  },
+  {
+    id: '2',
+    nombre: 'Apartamento Ejecutivo Medellín',
+    descripcion: 'Apartamento ejecutivo en el Poblado con vista panorámica',
+    categoriaId: '2',
+    cantidadCuartos: 2,
+    cantidadBanos: 2,
+    precio: 320000000,
+    ciudadId: '3',
+    fechaPublicacionActiva: '2024-01-20',
+    estadoPublicacion: 'PUBLICADA',
+    fechaPublicacion: '2024-01-18',
+    vendedorId: '3'
+  },
+  {
+    id: '3',
+    nombre: 'Casa Familiar Cali',
+    descripcion: 'Casa familiar de 4 habitaciones en sector residencial',
+    categoriaId: '1',
+    cantidadCuartos: 4,
+    cantidadBanos: 3,
+    precio: 380000000,
+    ciudadId: '5',
+    fechaPublicacionActiva: '2024-01-12',
+    estadoPublicacion: 'PUBLICADA',
+    fechaPublicacion: '2024-01-08',
+    vendedorId: '4'
+  },
+  {
+    id: '4',
+    nombre: 'Penthouse Soacha',
+    descripcion: 'Penthouse de lujo con terraza privada',
+    categoriaId: '3',
+    cantidadCuartos: 3,
+    cantidadBanos: 3,
+    precio: 520000000,
+    ciudadId: '2',
+    fechaPublicacionActiva: '2024-01-25',
+    estadoPublicacion: 'PUBLICADA',
+    fechaPublicacion: '2024-01-22',
+    vendedorId: '5'
+  },
+  {
+    id: '5',
+    nombre: 'Casa Económica Envigado',
+    descripcion: 'Casa económica ideal para familia joven',
+    categoriaId: '2',
+    cantidadCuartos: 2,
+    cantidadBanos: 1,
+    precio: 180000000,
+    ciudadId: '4',
+    fechaPublicacionActiva: '2024-01-18',
+    estadoPublicacion: 'PUBLICADA',
+    fechaPublicacion: '2024-01-15',
+    vendedorId: '6'
+  },
+  {
+    id: '6',
+    nombre: 'Villa de Lujo Palmira',
+    descripcion: 'Villa de lujo con piscina y jardín amplio',
+    categoriaId: '3',
+    cantidadCuartos: 5,
+    cantidadBanos: 4,
+    precio: 680000000,
+    ciudadId: '6',
+    fechaPublicacionActiva: '2024-01-30',
+    estadoPublicacion: 'PUBLICADA',
+    fechaPublicacion: '2024-01-28',
+    vendedorId: '7'
   }
 ];
 
@@ -76,8 +146,50 @@ export const createCasa = async (data: CreateCasaRequest, vendedorId: string): P
   return newCasa;
 };
 
-export const getCasasWithDetails = async (page: number = 1, limit: number = 10) => {
-  const casasWithDetails = mockCasas.map(casa => ({
+export interface SearchCasasParams {
+  sortBy?: 'ubicacion' | 'categoria' | 'cuartos' | 'banos' | 'precio';
+  sortOrder?: 'asc' | 'desc';
+  precioMin?: number;
+  precioMax?: number;
+  categoriaId?: string;
+  ciudadId?: string;
+  page?: number;
+  limit?: number;
+}
+
+export const searchCasas = async (params: SearchCasasParams = {}) => {
+  const {
+    sortBy = 'precio',
+    sortOrder = 'asc',
+    precioMin,
+    precioMax,
+    categoriaId,
+    ciudadId,
+    page = 1,
+    limit = 10
+  } = params;
+
+  const today = new Date().toISOString().split('T')[0];
+  
+  // Filtrar casas activas (fecha de publicación <= hoy)
+  let filteredCasas = mockCasas.filter(casa => casa.fechaPublicacionActiva <= today);
+
+  // Aplicar filtros
+  if (precioMin !== undefined) {
+    filteredCasas = filteredCasas.filter(casa => casa.precio >= precioMin);
+  }
+  if (precioMax !== undefined) {
+    filteredCasas = filteredCasas.filter(casa => casa.precio <= precioMax);
+  }
+  if (categoriaId) {
+    filteredCasas = filteredCasas.filter(casa => casa.categoriaId === categoriaId);
+  }
+  if (ciudadId) {
+    filteredCasas = filteredCasas.filter(casa => casa.ciudadId === ciudadId);
+  }
+
+  // Agregar detalles relacionados
+  const casasWithDetails = filteredCasas.map(casa => ({
     ...casa,
     categoria: mockCategories.find(cat => cat.id === casa.categoriaId),
     ciudad: mockCities.find(city => city.id === casa.ciudadId),
@@ -90,6 +202,34 @@ export const getCasasWithDetails = async (page: number = 1, limit: number = 10) 
     } : undefined
   }));
 
+  // Ordenar
+  casasWithDetails.sort((a, b) => {
+    let comparison = 0;
+    
+    switch (sortBy) {
+      case 'ubicacion':
+        const locationA = `${a.ciudad?.nombre}, ${a.ciudad?.departamento?.nombre}`;
+        const locationB = `${b.ciudad?.nombre}, ${b.ciudad?.departamento?.nombre}`;
+        comparison = locationA.localeCompare(locationB);
+        break;
+      case 'categoria':
+        comparison = (a.categoria?.nombre || '').localeCompare(b.categoria?.nombre || '');
+        break;
+      case 'cuartos':
+        comparison = a.cantidadCuartos - b.cantidadCuartos;
+        break;
+      case 'banos':
+        comparison = a.cantidadBanos - b.cantidadBanos;
+        break;
+      case 'precio':
+        comparison = a.precio - b.precio;
+        break;
+    }
+    
+    return sortOrder === 'desc' ? -comparison : comparison;
+  });
+
+  // Paginar
   const totalItems = casasWithDetails.length;
   const totalPages = Math.ceil(totalItems / limit);
   const startIndex = (page - 1) * limit;
@@ -101,6 +241,10 @@ export const getCasasWithDetails = async (page: number = 1, limit: number = 10) 
     totalPages,
     currentPage: page
   };
+};
+
+export const getCasasWithDetails = async (page: number = 1, limit: number = 10) => {
+  return searchCasas({ page, limit });
 };
 
 export const getCasasByVendedor = async (vendedorId: string, page: number = 1, limit: number = 10) => {
